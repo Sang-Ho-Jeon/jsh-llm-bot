@@ -20,11 +20,11 @@ messages = [] # 메세지들이 담기는 공간 => 챗봇(채팅 내역 6개월
 # - 우리 회사가 미국에 런칭했어. 대박.
 # - (유저) 아 존나 느려 => 한국 서버를 안거치고 미국 웹서버(포워드 프록시 - 정적 파일)
 
-def make_prompt():
+def make_prompt(user_input):
   res = client.chat.completions.create(
-    models='gpt-4o-mini',
+    model='gpt-4o-mini',
     messages=[
-      {'role':'user', 'content':user_input},
+      {'role':'user', 'content': user_input},
       # {'role':'system', 'content':"안녕하세요. 환불 절차를 도와드리겠습니다. 고객님의 성함과 연락처를 입력해주세요."}
     ]
   )
@@ -41,7 +41,7 @@ def index():
     messages.append({"role":"user", "text":user_input})
     messages.append({"role":"bot", "text":bot_response})
 
-  return render_template('index.html', messages)
+  return render_template('index.html', messages = messages)
 
 
 if __name__ == "__main__":
