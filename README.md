@@ -37,4 +37,13 @@ LLM chat bot to use CrewAI
 > pip install crewai crewai-tools
 > pip install langchain-ollama
 
-### 3-2 Flack 사용해서 기본적인 챗봇
+### 3-2 Flask 사용해서 기본적인 챗봇
+
+### Git 명령어
+- git add .
+- git commit -m 'first commit'
+- git push origin main
+
+
+Q. venv랑 gitignore .을 찍는 이유
+- 설정 파일과 실행 파일을 구분하기 위함.

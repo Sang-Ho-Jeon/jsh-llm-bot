@@ -57,3 +57,12 @@ crew = Crew(
 result = crew.kickoff()
 
 print(result)
+
+# 우리가 하려는 것. 배우고 있는 것
+# 파이썬을 활용한 LLM - Ollma, CrewAI(AI agent - 랜딩 페이지 제작)
+# 언어모델을 핸들링하고나서 결과값을 자바서버에 내려줘야해.
+# LLM이 만들어낸 결과값을 어떻게 자바서버에 내려주지?
+# - REST API(Python-FrameWork) => Java서버
+
+# Flask(쉬움, 진입장벽 낮음), FastAPI(진입장벽이 있는 편) => (1) 깃헙 스타 (2) 구글 검색량
+# - AI기업, 메인 서버. AI 관련 인퍼런스(추론값) 값은 Python 백엔드로 내려주는 형태
