@@ -1,4 +1,5 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, jsonify
+from flask_cors import CORS  # CORS 모듈 추가
 from dotenv import load_dotenv
 import os
 from openai import OpenAI
@@ -8,6 +9,7 @@ from sqlalchemy import text
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)  # CORS 설정 적용
 
 api_key = os.getenv('OPENAI_API_KEY')
 client = OpenAI(api_key=api_key)
@@ -22,17 +24,21 @@ def make_prompt(user_input):
 
     return res.choices[0].message.content  # dict: 제공
 
-@app.route('/', methods=["GET", "POST"])
+@app.route('/', methods=["POST"])
 def index():
     db = next(get_db())
     bot_response = ""
-    if request.method == 'POST':
-        user_input = request.form['user_input']  # 유저가 채팅창에 입력한 내용
-        print(user_input)
-        
-        # 책 제목이 포함된 모든 책들을 가져오기
+    books_data = []
+    faqs_data = []
+
+    data = request.json
+    user_input = data.get('user_input')
+    search_type = data.get('search_type')
+    print(f"User Input: {user_input}, Search Type: {search_type}")
+
+    if search_type == 'book':
         query = text("""
-            SELECT isbn, pub_name, pub_date, sale_stat, sale_vol, papr_pric, e_pric, sale_com, pub_review 
+            SELECT isbn, pub_name, pub_date, sale_stat, sale_vol, papr_pric, e_pric, sale_com, pub_review, title 
             FROM book 
             WHERE title LIKE :title
         """)
@@ -40,29 +46,52 @@ def index():
         print(books)
         
         if books:
-            book_details = [
-                (
-                    f"책 제목: {user_input}\n"
-                    f"ISBN: {book.isbn}\n"
-                    f"출판사: {book.pub_name}\n"
-                    f"출판일: {book.pub_date}\n"
-                    f"판매 상태: {book.sale_stat}\n"
-                    f"판매량: {book.sale_vol}\n"
-                    f"종이책 가격: {book.papr_pric}원\n"
-                    f"전자책 가격: {book.e_pric}원\n"
-                    f"판매 회사: {book.sale_com}\n"
-                    f"출판사 리뷰: {book.pub_review}\n"
-                )
+            books_data = [
+                {
+                    "title": book.title,
+                    "isbn": book.isbn,
+                    "pub_name": book.pub_name,
+                    "pub_date": book.pub_date,
+                    "sale_stat": book.sale_stat,
+                    "sale_vol": book.sale_vol,
+                    "papr_pric": book.papr_pric,
+                    "e_pric": book.e_pric,
+                    "sale_com": book.sale_com,
+                    "pub_review": book.pub_review,
+                }
                 for book in books
             ]
-            bot_response = "\n\n".join(book_details)
+            bot_response = "다음은 검색된 책들입니다."
         else:
             bot_response = "해당 책을 찾을 수 없습니다."
 
-        messages.append({'role': 'user', 'content': user_input})
-        messages.append({'role': 'bot', 'content': bot_response})
+    elif search_type == 'faq':
+        query = text("""
+            SELECT title, cont, view_cnt 
+            FROM faq 
+            WHERE title LIKE :input OR cont LIKE :input
+        """)
+        faqs = db.execute(query, {"input": f"%{user_input}%"}).fetchall()
+        print(faqs)
 
-    return render_template('index.html', messages=messages)
+        if faqs:
+            faqs_data = [
+                {
+                    "title": faq.title,
+                    "cont": faq.cont,
+                    "view_cnt": faq.view_cnt,
+                }
+                for faq in faqs
+            ]
+            bot_response = "다음은 검색된 FAQ 항목들입니다."
+        else:
+            bot_response = "해당 FAQ 항목을 찾을 수 없습니다."
+
+    return jsonify({
+        'bot_response': bot_response,
+        'books': books_data,
+        'faqs': faqs_data
+    })
 
 if __name__ == "__main__":
     app.run(debug=True)
